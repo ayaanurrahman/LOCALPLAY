@@ -1,0 +1,8 @@
+{
+    "buildCommand": "npm run build",
+    "outputDirectory": "build/client",
+    "rewrites": [
+        { "source": "/api/(.*)", "destination": "https://localplay-backend.onrender.com/api/$1" },
+        { "source": "/(.*)", "destination": "/index.html" }
+    ]
+}

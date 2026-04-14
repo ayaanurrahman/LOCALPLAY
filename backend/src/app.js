@@ -68,7 +68,11 @@ app.use(generalLimiter)
 app.use(express.static("./public"))
 // using cors to disable cors policy 
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: [
+        process.env.CLIENT_URL || 'http://localhost:5173',
+        'https://localplay-three.vercel.app',
+        'https://localplay-git-main-ayaanurrahman.vercel.app'
+    ],
     credentials: true
 }))
 // using cookie parser to store jwt token 
