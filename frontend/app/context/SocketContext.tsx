@@ -43,7 +43,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         }
 
         // connect to backend socket server
-        const socket = io('http://localhost:5173', {
+        const socket = io('https://localplay-backend.onrender.com', {
             withCredentials: true
         })
         socketRef.current = socket
