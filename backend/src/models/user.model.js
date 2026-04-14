@@ -88,6 +88,30 @@ const userSchema = new mongoose.Schema({
         type: String,
         maxlength: 200,
         trim: true
+    },
+
+    // --- email verification ---
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    avgRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    matchesPlayed: {
+        type: Number,
+        default: 0
+    },
+    verifyToken: {
+        type: String,
+        default: null
+    },
+    verifyTokenExpiry: {
+        type: Date,
+        default: null
     }
 }, {timestamps: true})
 

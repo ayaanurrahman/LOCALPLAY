@@ -1,11 +1,8 @@
 const express = require("express")
-
-// initializing the auth router  
 const router = express.Router()
 
-const {register, login, logout } = require("../controllers/auth.controller")
-const {protect} = require("../middlewares/auth.middleware")
-
+const { register, login, logout, refresh, verifyEmail, resendVerification } = require("../controllers/auth.controller")
+const { protect } = require("../middlewares/auth.middleware")
 
 /**
  * @swagger
@@ -32,11 +29,9 @@ const {protect} = require("../middlewares/auth.middleware")
  *                 example: Test@1234
  *     responses:
  *       201:
- *         description: Registration successful
+ *         description: Registration successful, verification email sent
  *       400:
  *         description: Validation error or email already registered
- *       500:
- *         description: Internal server error
  */
 router.post("/register", register)
 
@@ -65,8 +60,6 @@ router.post("/register", register)
  *         description: Login successful
  *       400:
  *         description: Invalid credentials
- *       500:
- *         description: Internal server error
  */
 router.post("/login", login)
 
@@ -74,7 +67,7 @@ router.post("/login", login)
  * @swagger
  * /api/auth/logout:
  *   post:
- *     summary: Logout the current user
+ *     summary: Logout and revoke refresh token
  *     tags: [Auth]
  *     security:
  *       - cookieAuth: []
@@ -83,6 +76,58 @@ router.post("/login", login)
  *         description: Logged out successfully
  */
 router.post("/logout", logout)
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Issue a new access token using the refresh token cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: New access token issued
+ *       401:
+ *         description: Invalid, revoked, or expired refresh token
+ */
+router.post("/refresh", refresh)
+
+/**
+ * @swagger
+ * /api/auth/verify/{token}:
+ *   get:
+ *     summary: Verify email address via token from email link
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.get("/verify/:token", verifyEmail)
+
+/**
+ * @swagger
+ * /api/auth/resend-verify:
+ *   post:
+ *     summary: Resend verification email (must be logged in)
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Verification email resent
+ *       400:
+ *         description: Already verified
+ *       429:
+ *         description: Too soon to resend
+ */
+router.post("/resend-verify", protect, resendVerification)
 
 /**
  * @swagger
@@ -95,16 +140,12 @@ router.post("/logout", logout)
  *     responses:
  *       200:
  *         description: Current user data
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
  *       401:
  *         description: Not authenticated
  */
 router.get("/me", protect, async (req, res) => {
-    res.status(200).json(req.user)
+    const user = req.user.toObject()
+    user.id = user._id.toString()
+    res.status(200).json(user)
 })
-
-// exporting auth router 
 module.exports = router

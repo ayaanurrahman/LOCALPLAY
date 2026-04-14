@@ -19,7 +19,14 @@ const options = {
                 cookieAuth: {
                     type: "apiKey",
                     in: "cookie",
-                    name: "token"
+                    name: "token",
+                    description: "Short-lived access token (15 min). Auto-refreshed via refreshToken cookie."
+                },
+                refreshCookieAuth: {
+                    type: "apiKey",
+                    in: "cookie",
+                    name: "refreshToken",
+                    description: "Long-lived refresh token (7 days). Used to silently reissue access tokens."
                 }
             },
             schemas: {
@@ -31,6 +38,7 @@ const options = {
                         email: { type: "string" },
                         role: { type: "string", enum: ["user", "admin"] },
                         isBanned: { type: "boolean" },
+                        isVerified: { type: "boolean" },
                         games: {
                             type: "array",
                             items: {

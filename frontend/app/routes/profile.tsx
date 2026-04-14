@@ -36,6 +36,21 @@ function ProfileContent() {
     const [success, setSuccess] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [resendLoading, setResendLoading] = useState(false)
+    const [resendMsg, setResendMsg] = useState('')
+
+    const handleResendVerification = async () => {
+        setResendLoading(true)
+        setResendMsg('')
+        try {
+            const res = await api.post('/auth/resend-verify')
+            setResendMsg(res.data.message)
+        } catch (err: any) {
+            setResendMsg(err.response?.data?.message || 'Failed to resend. Try again.')
+        } finally {
+            setResendLoading(false)
+        }
+    }
 
     // fetch fresh profile from API on mount so we always have latest data
     useEffect(() => {
@@ -172,6 +187,27 @@ function ProfileContent() {
                 </p>
             </div>
 
+            {/* unverified email banner */}
+            {user && !user.isVerified && (
+                <div className="mb-5 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1">
+                        <p className="text-sm font-medium text-yellow-800">Your email is not verified</p>
+                        <p className="text-xs text-yellow-700 mt-0.5">
+                            Verify your email to send play requests to other players.
+                        </p>
+                        {resendMsg && <p className="text-xs text-yellow-900 mt-1 font-medium">{resendMsg}</p>}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleResendVerification}
+                        disabled={resendLoading}
+                        className="text-xs font-medium px-3 py-1.5 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-lg hover:bg-yellow-200 transition disabled:opacity-50 whitespace-nowrap"
+                    >
+                        {resendLoading ? 'Sending...' : 'Resend email'}
+                    </button>
+                </div>
+            )}
+
             {/* user info card */}
             <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6 flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xl">
@@ -180,13 +216,27 @@ function ProfileContent() {
                 <div>
                     <p className="font-semibold text-gray-900">{user?.username}</p>
                     <p className="text-sm text-gray-500">{user?.email}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        user?.role === 'admin'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-green-100 text-green-700'
-                    }`}>
-                        {user?.role}
-                    </span>
+                    {(user as any)?.avgRating > 0 && (
+                        <p className="text-xs text-yellow-600 font-medium mt-0.5">
+                            {'⭐'.repeat(Math.round((user as any).avgRating))} {(user as any).avgRating.toFixed(1)} · {(user as any).matchesPlayed} match{(user as any).matchesPlayed !== 1 ? 'es' : ''}
+                        </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            user?.role === 'admin'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-green-100 text-green-700'
+                        }`}>
+                            {user?.role}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            user?.isVerified
+                                ? 'bg-blue-50 text-blue-600'
+                                : 'bg-yellow-50 text-yellow-700'
+                        }`}>
+                            {user?.isVerified ? '✓ verified' : 'unverified'}
+                        </span>
+                    </div>
                 </div>
             </div>
 

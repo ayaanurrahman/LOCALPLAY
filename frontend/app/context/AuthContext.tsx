@@ -2,18 +2,17 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import api from '../api/axios'
 
-
-// type definitions
 interface Game {
     name: string
     skillLevel: string
 }
-// defining user interface 
+
 interface User {
     id: string
     username: string
     email: string
     role: 'user' | 'admin'
+    isVerified: boolean
     games?: Game[]
     bio?: string
     availability?: {
@@ -28,36 +27,34 @@ interface User {
     }
 }
 
-// defining the interface of auth context (how does the context looks lookupService, it only has 4 values with their types)
 interface AuthContextType {
     user: User | null
     loading: boolean
     login: (userData: User) => void
     logout: () => Promise<void>
+    refreshUser: () => Promise<void>
 }
 
-// creating the auth context 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
-    // this use effect calls /api/auth/me and stores the response data into user state 
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const res = await api.get('/auth/me')
-                setUser(res.data)
-            } catch {
-                setUser(null)
-            } finally {
-                setLoading(false)
-            }
+    const fetchUser = async () => {
+        try {
+            const res = await api.get('/auth/me')
+            setUser(res.data)
+        } catch {
+            setUser(null)
+        } finally {
+            setLoading(false)
         }
+    }
+
+    useEffect(() => {
         fetchUser()
     }, [])
-
 
     const login = (userData: User) => setUser(userData)
 
@@ -69,16 +66,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
+    // call this after email verification to sync isVerified state
+    const refreshUser = async () => {
+        await fetchUser()
+    }
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     )
 }
 
-//  this hook lets us use authcontext variables easily 
 export const useAuth = () => {
     const context = useContext(AuthContext)
     if (!context) throw new Error('useAuth must be used within AuthProvider')
     return context
-} 
+}

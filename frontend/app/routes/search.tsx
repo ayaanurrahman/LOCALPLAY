@@ -268,6 +268,11 @@ function SearchContent() {
                                                 <p className="font-semibold text-gray-900">
                                                     {player.username}
                                                 </p>
+                                                {(player as any).avgRating > 0 && (
+                                                    <span className="text-xs text-yellow-600">
+                                                        ⭐ {(player as any).avgRating.toFixed(1)}
+                                                    </span>
+                                                )}
                                                 {player.location?.address && (
                                                     <p className="text-xs text-gray-400 mt-0.5">
                                                         📍 {player.location.address.split(',').slice(0, 2).join(',')}

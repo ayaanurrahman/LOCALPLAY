@@ -8,8 +8,12 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
-        proxy: {
-            '/api': 'http://localhost:3000'
+    proxy: {
+        '/api': 'http://localhost:3000',
+        '/socket.io': {          // ← add this block
+            target: 'http://localhost:3000',
+            ws: true             // forward WebSocket upgrades
         }
     }
+}
 })

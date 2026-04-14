@@ -1,16 +1,27 @@
-// requiring dotenv module to use environment variables 
 require("dotenv").config()
 
-// requiring app 
+const http = require("http")
+const { Server } = require("socket.io")
 const app = require("./src/app")
-
-// importing function to connect the database 
 const connectToTheDatabase = require("./src/config/database.config")
+const { initSocket } = require("./src/socket")
 
-// connecting the database to the server
+// create HTTP server from express app
+const server = http.createServer(app)
+
+// attach Socket.io to the HTTP server
+const io = new Server(server, {
+    cors: {
+        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        credentials: true
+    }
+})
+
+// make io available to controllers via the initSocket helper
+initSocket(io)
+
 connectToTheDatabase()
 
-// listening to the server on server port 
-app.listen(process.env.PORT, () =>{
-    console.log("server successfully running on port: ", process.env.PORT)
-}) 
+server.listen(process.env.PORT, () => {
+    console.log("server successfully running on port:", process.env.PORT)
+})

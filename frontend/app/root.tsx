@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 import { AuthProvider } from './context/AuthContext'
+import { SocketProvider } from './context/SocketContext'
 import Navbar from './components/Navbar'
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -46,10 +47,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
         <AuthProvider>
-            <Navbar />
-            <main className="max-w-5xl mx-auto px-4 py-8">
-                <Outlet />
-            </main>
+            <SocketProvider>
+                <Navbar />
+                <main className="max-w-5xl mx-auto px-4 py-8">
+                    <Outlet />
+                </main>
+            </SocketProvider>
         </AuthProvider>
     )
   }

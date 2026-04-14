@@ -5,6 +5,8 @@ const authRoutes = require("./routes/auth.routes")
 const userRoutes = require("./routes/user.routes")
 const playRequestRoutes = require("./routes/playRequest.routes")
 const adminRoutes = require("./routes/admin.routes")
+const notificationRoutes = require("./routes/notification.routes")
+const ratingRoutes = require("./routes/rating.routes")
 const swaggerUi = require("swagger-ui-express")
 const swaggerSpec = require("./config/swagger.config")
 const path = require("path")
@@ -24,7 +26,7 @@ const app = express()
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
-            defaultSrc: ["'self'"],
+            defaultSrc: ["'self'", "ws://localhost:3000"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "https://validator.swagger.io"]
@@ -50,15 +52,15 @@ const generalLimiter = rateLimit({
 // strict rate limiter — auth routes only
 // max 10 requests per IP per 15 minutes
 // prevents brute force attacks on login/register
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: {
-        "message": "Too many login attempts from this IP, please try again after 15 minutes"
-    },
-    standardHeaders: true,
-    legacyHeaders: false
-})
+// const authLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000,
+//     max: 10,
+//     message: {
+//         "message": "Too many login attempts from this IP, please try again after 15 minutes"
+//     },
+//     standardHeaders: true,
+//     legacyHeaders: false
+// })
 
 app.use(generalLimiter)
 
@@ -74,10 +76,13 @@ app.use(cookieParser())
 
 
 // Routes
-app.use("/api/auth",authLimiter, authRoutes) // Auth Route 
+// app.use("/api/auth",authLimiter, authRoutes) // Auth Route 
+app.use("/api/auth", authRoutes) // Auth Route 
 app.use("/api/users", userRoutes) //User Route
 app.use("/api/requests", playRequestRoutes) //play requests route
 app.use("/api/admin", adminRoutes) //admin route
+app.use("/api/notifications", notificationRoutes) //notifications route
+app.use("/api/ratings", ratingRoutes) //ratings route
 
 // using swagger for api documentation so anyone can see and test those apis that i have built in this application 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))

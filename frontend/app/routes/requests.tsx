@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
 import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
 
 type Status = 'pending' | 'accepted' | 'declined' | 'cancelled'
 
@@ -32,10 +33,18 @@ export default function Requests() {
 }
 
 function RequestsContent() {
+    // ALL hooks must be here at the top, inside the component
+    const { user } = useAuth()
     const [tab, setTab] = useState<'incoming' | 'outgoing' | 'history'>('incoming')
     const [data, setData] = useState<PlayRequest[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [ratingModal, setRatingModal] = useState<PlayRequest | null>(null)
+    const [stars, setStars] = useState(0)
+    const [comment, setComment] = useState('')
+    const [ratingLoading, setRatingLoading] = useState(false)
+    const [ratingError, setRatingError] = useState('')
+    const [ratedMatches, setRatedMatches] = useState<string[]>([])
 
     const fetchData = async () => {
         setLoading(true)
@@ -62,7 +71,7 @@ function RequestsContent() {
     const handleRespond = async (id: string, status: 'accepted' | 'declined') => {
         try {
             await api.put(`/requests/${id}/respond`, { status })
-            fetchData() // refresh list
+            fetchData()
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to respond')
         }
@@ -74,6 +83,30 @@ function RequestsContent() {
             fetchData()
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to cancel')
+        }
+    }
+
+    const handleRate = async () => {
+        if (!ratingModal || stars === 0) {
+            setRatingError('Please select a star rating')
+            return
+        }
+        setRatingLoading(true)
+        setRatingError('')
+        try {
+            await api.post('/ratings', {
+                playRequestId: ratingModal._id,
+                stars,
+                comment
+            })
+            setRatedMatches(prev => [...prev, ratingModal._id])
+            setRatingModal(null)
+            setStars(0)
+            setComment('')
+        } catch (err: any) {
+            setRatingError(err.response?.data?.message || 'Failed to submit rating')
+        } finally {
+            setRatingLoading(false)
         }
     }
 
@@ -207,8 +240,74 @@ function RequestsContent() {
                                     Cancel Request
                                 </button>
                             )}
+
+                            {tab === 'history' && !ratedMatches.includes(req._id) &&
+                                new Date(req.proposedTime) < new Date() && (
+                                <button
+                                    onClick={() => { setRatingModal(req); setRatingError('') }}
+                                    className="mt-2 px-4 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-sm rounded-lg transition font-medium border border-yellow-200"
+                                >
+                                    ⭐ Rate this match
+                                </button>
+                            )}
+                            {tab === 'history' && ratedMatches.includes(req._id) && (
+                                <p className="mt-2 text-xs text-green-600 font-medium">✓ Rated</p>
+                            )}
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* rating modal */}
+            {ratingModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">Rate your match</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            How was your {ratingModal.game} match?
+                        </p>
+
+                        <div className="flex gap-2 mb-4">
+                            {[1, 2, 3, 4, 5].map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => setStars(s)}
+                                    className={`text-3xl transition ${s <= stars ? 'opacity-100' : 'opacity-30'}`}
+                                >
+                                    ⭐
+                                </button>
+                            ))}
+                        </div>
+
+                        <textarea
+                            value={comment}
+                            onChange={e => setComment(e.target.value)}
+                            placeholder="Optional comment..."
+                            rows={3}
+                            maxLength={300}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 mb-3"
+                        />
+
+                        {ratingError && (
+                            <p className="text-red-600 text-sm mb-3">{ratingError}</p>
+                        )}
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleRate}
+                                disabled={ratingLoading}
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                            >
+                                {ratingLoading ? 'Submitting...' : 'Submit Rating'}
+                            </button>
+                            <button
+                                onClick={() => { setRatingModal(null); setStars(0); setComment('') }}
+                                className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
