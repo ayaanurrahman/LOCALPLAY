@@ -33,7 +33,11 @@ exports.updateProfile = async(req,res) =>{
         // building update object with only the fields that were sent
         const updates = {}
         if (games) updates.games = games
-        if (availability) updates.availability = availability
+        if (availability) {
+            updates.availability = {}
+        if (availability.days) updates.availability.days = availability.days
+        if (availability.timeSlot) updates.availability.timeSlot = availability.timeSlot
+    }
         if (preferredLocation) updates.preferredLocation = preferredLocation
         if (bio) updates.bio = bio
         if (location) updates.location = location
