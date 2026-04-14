@@ -12,7 +12,11 @@ const server = http.createServer(app)
 // attach Socket.io to the HTTP server
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        origin: [
+            process.env.CLIENT_URL,
+            'https://localplay-three.vercel.app',
+            'https://localplay-git-main-ayaanurrahman.vercel.app'
+        ],
         credentials: true
     }
 })
